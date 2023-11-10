@@ -1,9 +1,7 @@
-FROM apache/airflow:2.7.2-python3.8
+FROM apache/airflow:2.7.2-python3.8 as base
 
-ARG TEST_MODE=false
-RUN if [ "$TEST_MODE" = "true" ]; then \
-        COPY --chown=airflow:root test_data/ /opt/airflow/inputDataDir; \
-    else \
-        COPY --chown=airflow:root /eupath/data/EuPathDB/manualDelivery/MicrobiomeDB/common /opt/airflow/inputDataDir; \
-    fi
+FROM base as production-base
+COPY --chown=airflow:root /eupath/data/EuPathDB/manualDelivery/MicrobiomeDB/common /opt/airflow/inputDataDir
 
+FROM base as dev-base
+COPY --chown=airflow:root test_data/ /opt/airflow/inputDataDir
