@@ -3,7 +3,6 @@ import pendulum
 import os
 import sys
 
-import requests
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.sensors.filesystem import FileSensor
@@ -18,19 +17,32 @@ from airflow.sensors.filesystem import FileSensor
 )
 def dada2():
     @task
-    def copy_silva_to_cluster():
-        # todo ignore this for test mode somehow?
-        # or should there be a run local mode?
-        # todo consider templating everything w jinja
+    def make_nextflow_config():
+        # todo this also needs to happen per study, all these tasks do.. not sure how to do that
+        sys.stderr.write("making nextflow config\n")
         base_path = "/opt/airflow/inputDataDir/rRNAReference/SILVA/138_SSURef_NR99/final/"
         training_data_path = base_path + "training_set.138_SSURef_NR99.fa.gz"
         species_assignment_path = base_path + "species_assignment.138_SSURef_NR99.fa.gz"
+
+        config = "workingDir=/opt/airflow/inputDataDir/studies/test-study-dada2/workspace/ \
+                trainingSetFile=" + training_data_path + " \
+                speciesAssignmentFile=" + species_assignment_path + " \
+                resultFile=/opt/airflow/inputDataDir/studies/test-study-dada2/results/"
+        
+        with open("/opt/airflow/inputDataDir/studies/test-study-dada2/config_file", "w") as f:
+            f.write(config)
+
+    @task
+    def copy_to_cluster():
+        # todo ignore this for test mode somehow?
+        # or should there be a run local mode?
+        # todo consider templating everything w jinja
 
         # todo think about how this would work in production when run on pmacs. 
         ## how does the data get to pmacs?
         ## how does it get pmacs config like base dir, login creds, etc?     
        
-        sys.stderr.write("copying SILVA to cluster\n")
+        sys.stderr.write("copying to cluster\n")
 
     @task
     def run_dada2_on_cluster():
@@ -48,7 +60,7 @@ def dada2():
             study_path = os.path.join(base_path, study)
             task_name = f"dada2_{study}"
             # todo not sure i have the nextflow command right
-            nextflow_command = f"nextflow run VEuPathDB/MarkerGeneAnalysis16sDADA2 -with-trace -c  <config_file> -r main --input {study_path}"
+            nextflow_command = f"nextflow run VEuPathDB/MarkerGeneAnalysis16sDADA2 -with-trace -c  /opt/airflow/inputDataDir/studies/test-study-dada2/config_file -r main --input {study_path}"
             sys.stderr.write(f"running {task_name}\n")
             task_instance = BashOperator(
                 task_id=task_name,
@@ -68,6 +80,6 @@ def dada2():
         sys.stderr.write("copying results to local\n")
         ## todo how does it monitor pmacs and get data back?
 
-    copy_silva_to_cluster() >> run_dada2_on_cluster() >> copy_results_to_local()
+    make_nextflow_config() >> copy_to_cluster() >> run_dada2_on_cluster() >> copy_results_to_local()
 
 dada2 = dada2()
