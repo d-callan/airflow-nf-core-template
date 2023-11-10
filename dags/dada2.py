@@ -65,6 +65,7 @@ def dada2():
             task_instance = BashOperator(
                 task_id=task_name,
                 bash_command=nextflow_command,
+                dag=dada2
             )
 
             sensor_task >> task_instance
