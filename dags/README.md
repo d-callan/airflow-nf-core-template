@@ -1,3 +1,7 @@
 # DAGS
 
-Keep all dags here. View their status, re-run them, etc at localhost:8080
+Keep all dags here. 
+
+To view their status, re-run them, etc:
+  * docker compose up
+  * go to localhost:8080
