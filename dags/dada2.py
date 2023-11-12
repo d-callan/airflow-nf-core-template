@@ -24,10 +24,10 @@ def dada2():
         training_data_path = base_path + "training_set.138_SSURef_NR99.fa.gz"
         species_assignment_path = base_path + "species_assignment.138_SSURef_NR99.fa.gz"
 
-        config = "workingDir=/opt/airflow/inputDataDir/studies/test-study-dada2/workspace/ \
-                trainingSetFile=" + training_data_path + " \
-                speciesAssignmentFile=" + species_assignment_path + " \
-                resultFile=/opt/airflow/inputDataDir/studies/test-study-dada2/results/"
+        config = "workingDir=/opt/airflow/inputDataDir/studies/test-study-dada2/workspace/\n" + \
+                "trainingSetFile=" + training_data_path + "\n" + \
+                "speciesAssignmentFile=" + species_assignment_path + "\n" + \
+                "resultFile=/opt/airflow/inputDataDir/studies/test-study-dada2/results/"
         
         with open("/opt/airflow/inputDataDir/studies/test-study-dada2/config_file", "w") as f:
             f.write(config)
@@ -43,6 +43,17 @@ def dada2():
         ## how does it get pmacs config like base dir, login creds, etc?     
        
         sys.stderr.write("copying to cluster\n")
+
+    @task
+    def test_nextflow():
+        sys.stderr.write("testing nextflow\n")
+        study_path = "/opt/airflow/inputDataDir/studies/test-study-dada2"
+        nextflow_command = f"nextflow run VEuPathDB/MarkerGeneAnalysis16sDADA2 -with-trace -c  /opt/airflow/inputDataDir/studies/test-study-dada2/config_file -r main --input {study_path}"
+        task_instance = BashOperator(
+                task_id="test_nextflow_dada2",
+                bash_command=nextflow_command,
+                dag=dada2
+            )
 
     @task
     def run_dada2_on_cluster():
@@ -81,6 +92,7 @@ def dada2():
         sys.stderr.write("copying results to local\n")
         ## todo how does it monitor pmacs and get data back?
 
-    make_nextflow_config() >> copy_to_cluster() >> run_dada2_on_cluster() >> copy_results_to_local()
+    #make_nextflow_config() >> copy_to_cluster() >> run_dada2_on_cluster() >> copy_results_to_local()
+    make_nextflow_config() >> test_nextflow()
 
 dada2 = dada2()
