@@ -21,13 +21,15 @@ def dada2():
         # todo this also needs to happen per study, all these tasks do.. not sure how to do that
         sys.stderr.write("making nextflow config\n")
         base_path = "/opt/airflow/inputDataDir/rRNAReference/SILVA/138_SSURef_NR99/final/"
-        training_data_path = base_path + "training_set.138_SSURef_NR99.fa.gz"
-        species_assignment_path = base_path + "species_assignment.138_SSURef_NR99.fa.gz"
+        #training_data_path = base_path + "training_set.138_SSURef_NR99.fa.gz"
+        #species_assignment_path = base_path + "species_assignment.138_SSURef_NR99.fa.gz"
 
-        config = "workingDir=/opt/airflow/inputDataDir/studies/test-study-dada2/workspace/\n" + \
-                "trainingSetFile=" + training_data_path + "\n" + \
-                "speciesAssignmentFile=" + species_assignment_path + "\n" + \
-                "resultFile=/opt/airflow/inputDataDir/studies/test-study-dada2/results/"
+        config ="params {\n" + \
+                "\tstudyIdFile=\"/opt/airflow/inputDataDir/studies/test-study-dada2/SRAIDS.tsv\"\n" + \
+                "\tworkingDir=\"/opt/airflow/inputDataDir/studies/test-study-dada2/workspace/\"\n" + \
+                "\ttrainingSet=\"" + base_path + "exampleTrainingSet.fa\"\n" + \
+                "\tspeciesAssignment=\"" + base_path + "exampleAssignment.fa\"\n" + \
+                "\toutputDir=\"/opt/airflow/inputDataDir/studies/test-study-dada2/results/\"\n}"
         
         with open("/opt/airflow/inputDataDir/studies/test-study-dada2/config_file", "w") as f:
             f.write(config)
